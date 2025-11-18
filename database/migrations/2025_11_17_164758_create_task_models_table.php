@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_categories', function (Blueprint $table) {
+        Schema::create('task_models', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            
-            $table->text('description')->nullable();
+            $table->string('title', 255);       // <<< Pastikan ini ada!
+            $table->text('description')->nullable(); // <<< Pastikan ini ada!
+            $table->boolean('is_completed')->default(false); // <<< Pastikan ini ada!
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_categories');
+        Schema::dropIfExists('task_models');
     }
 };
