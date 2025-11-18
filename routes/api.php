@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::resource('tasks', TaskController::class);
 
 Route::prefix('v1')->group(function () {
+    Route::resource('tasks', TaskController::class);
     Route::resource('products', ProductController::class);
     Route::resource('product-categories', ProductCategoriesController::class);
     
