@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\ProductCategoriesController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Api\ProductCategoryController as ApiProductCategoryController;
+use App\Http\Controllers\Api\ProductController as ApiProductController;
+use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\VendorController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\TaskController;
@@ -12,8 +13,9 @@ Route::resource('tasks', TaskController::class);
 
 Route::prefix('v1')->group(function () {
     Route::resource('tasks', TaskController::class);
-    Route::resource('products', ProductController::class);
-    Route::resource('product-categories', ProductCategoriesController::class);
+    Route::resource('products', ApiProductController::class);
+    Route::resource('product-categories', ApiProductCategoryController::class);
+    Route::resource('product-variants', ProductVariantController::class);
     
     Route::resource('vendors', VendorController::class);
 
