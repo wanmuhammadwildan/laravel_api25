@@ -2,105 +2,140 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\ProductCategory;
 use App\Http\Controllers\Controller;
+use App\Models\ProductCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class ProductCategoryController extends Controller
 {
-    // GET: Mengambil semua data
-   // READ (Semua data)
-   public function index()
-   {
-       $categories = ProductCategory::all();
-       
-       // Pengecekan: Jika daftar tasks kosong
-       if ($categories->isEmpty()) {
-           return response()->json([
-               'message' => 'Data category kosong. Silakan tambahkan category baru.'
-           ], 200); // Menggunakan 200 OK karena permintaan berhasil
-       }
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        try {
+            $productCategories = ProductCategory::with('products')->get();
 
-       return response()->json($categories);
-   }
+            return response()->json([
+                'data' => $productCategories,
+            ], 200);
+        } catch (Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+    }
 
-   // CREATE
-   public function store(Request $request)
-   {
-       // 1. Validasi Data
-       $categoryData = $request->validate([
-           'name' => 'required|max:255',
-           'description' => 'nullable',
-       ]);
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+    }
 
-       // 2. Simpan Data
-       $category = ProductCategory::create($categoryData);
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        try {
 
-       // 3. Respon
-       return response()->json([
-           'message' => 'Category created successfully!',
-           'data' => $category
-       ], 201); // 201 Created
-   }
+            $validatedData = $request->validate([
+                'name' => 'required|max:255|unique:product_categories,name',
+                'description' => 'nullable|string',
+            ]);
 
-   // READ (Data tunggal)
-   public function show($id)
-   {
-       // Menggunakan findOrFail untuk otomatis melempar 404 jika data tidak ditemukan
-       try {
-           $category = ProductCategory::findOrFail($id);
-           return response()->json($category);
-       } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-           return response()->json([
-               'message' => 'Data category tidak ditemukan.'
-           ], 404); // 404 Not Found
-       }
-   }
+            DB::beginTransaction();
 
-   // UPDATE
-   public function update(Request $request, string $id)
-   {
-       // Cari data. Jika tidak ada, kembalikan 404 Not Found.
-       $category = ProductCategory::find($id);
-       if (!$category) {
-           return response()->json([
-               'message' => 'Gagal update. Data category tidak ditemukan.'
-           ], 404);
-       }
+            $productCategory = ProductCategory::create($validatedData);
 
-       // 1. Validasi Data
-       $validatedData = $request->validate([
-           'title' => 'sometimes|required|max:255', // Gunakan 'sometimes' agar tidak wajib di setiap request PATCH/PUT
-           'description' => 'nullable',
-           'is_completed' => 'sometimes|boolean'
-       ]);
+            DB::commit();
+            return response()->json([
+                'message' => 'Product category created successfully.',
+                'data' => $productCategory,
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->errors()], 422);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+    }
 
-       // 2. Perbarui Data
-       $category->update($validatedData);
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        try {
+            $productCategory = ProductCategory::findOrFail($id);
 
-       // 3. Respon
-       return response()->json([
-            'message' => 'Category updated successfully!',
-           'data' => $category
-       ], 200);
-   }
+            return response()->json([
+                'data' => $productCategory,
+            ], 200);
+        } catch (Throwable $e) {
+            return response()->json(['message' => 'Product category not found'], 404);
+        }
+    }
 
-   // DELETE
-   public function destroy(string $id)
-   {
-       // Cari data. Jika tidak ada, kembalikan 404 Not Found.
-       $category = ProductCategory::find($id);
-       if (!$category) {
-           return response()->json([
-               'message' => 'Gagal hapus. Data category tidak ditemukan.'
-           ], 404);
-       }
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+    }
 
-       $category->delete();
-       
-       // Respon
-       return response()->json([
-           'message' => 'Category deleted successfully!'
-       ], 200); 
-   }
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        try {
+            $productCategory = ProductCategory::findOrFail($id);
+
+            $validatedData = $request->validate([
+                'name' => 'required|max:255|unique:product_categories,name,' . $id,
+                'description' => 'nullable|string',
+            ]);
+
+            DB::beginTransaction();
+
+            $productCategory->update($validatedData);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Product category updated successfully.',
+                'data' => $productCategory,
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->errors()], 422);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        try {
+            $productCategory = ProductCategory::findOrFail($id);
+
+            DB::beginTransaction();
+            $productCategory->delete();
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Product category deleted successfully.',
+                'data' => null,
+            ], 200);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+    }
 }

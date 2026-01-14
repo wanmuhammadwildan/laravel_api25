@@ -12,24 +12,23 @@ class ProductController extends Controller
     // READ ALL (GET /api/products)
     public function index()
     {
-        // Mengambil semua produk
-        $products = Product::all();
-        
+        // Mengambil semua produk dengan relasi kategorinya
+        $products = Product::with('category')->get();
+
         // Mengembalikan data sebagai JSON (Status 200 OK)
         return response()->json([
-            'message' => 'Daftar semua produk berhasil dimuat.',
             'data' => $products
         ], 200);
     }
 
     // CREATE (POST /api/products)
-    public function store(Request $request) 
+    public function store(Request $request)
     {
         try {
             // Validasi data input
             $validatedData = $request->validate([
                 // Pastikan product_category_id ada di tabel product_categories, kolom id
-                'product_category_id' => 'required|exists:product_categories,id', 
+                'product_category_id' => 'required|exists:product_categories,id',
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|max:255|unique:products,code', // Menambahkan validasi unique
                 // Tambahkan field lain seperti price, description, dll. jika ada di tabel
@@ -43,7 +42,7 @@ class ProductController extends Controller
                 'message' => 'Produk berhasil ditambahkan.',
                 'data' => $product
             ], 201);
-            
+
         } catch (ValidationException $e) {
             // Mengembalikan error validasi (Status 422 Unprocessable Entity)
             return response()->json([
@@ -58,7 +57,7 @@ class ProductController extends Controller
     {
         // Menggunakan findOrFail untuk otomatis melempar 404 jika data tidak ditemukan
         $product = Product::with('category', 'variants')->findOrFail($id);
-        
+
         return response()->json([
             'message' => 'Detail produk berhasil dimuat.',
             'data' => $product
@@ -70,7 +69,7 @@ class ProductController extends Controller
     {
         // Cari data. findOrFail akan melempar 404 jika data tidak ditemukan.
         $product = Product::findOrFail($id);
-        
+
         try {
             // 1. Validasi Data
             $validatedData = $request->validate([
@@ -85,10 +84,10 @@ class ProductController extends Controller
 
             // 3. Respon
             return response()->json([
-                 'message' => 'Produk berhasil diperbarui!',
+                'message' => 'Produk berhasil diperbarui!',
                 'data' => $product
             ], 200);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validasi gagal.',
@@ -104,10 +103,10 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $product->delete();
-        
+
         // Respon
         return response()->json([
-             'message' => 'Produk berhasil dihapus!'
-        ], 200); 
+            'message' => 'Produk berhasil dihapus!'
+        ], 200);
     }
 }

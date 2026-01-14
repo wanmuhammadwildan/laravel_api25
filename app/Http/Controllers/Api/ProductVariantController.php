@@ -16,11 +16,11 @@ class ProductVariantController extends Controller
      */
     public function index()
     {
-        // Ambil semua varian produk.
-        $variants = ProductVariant::all();
+        // Ambil semua varian produk dengan relasi produknya.
+        $variants = ProductVariant::with('product')->get();
 
         // Kembalikan dalam format JSON.
-        return response()->json($variants);
+        return response()->json(['data' => $variants]);
     }
 
     /**
@@ -33,10 +33,10 @@ class ProductVariantController extends Controller
             // 1. Validasi Data
             $validatedData = $request->validate([
                 // Memperbaiki sintaks validasi: menambahkan koma dan memperbaiki 'exists'
-                'product_id'       => 'required|integer|exists:products,id', // Harus ada di tabel products
-                'variant_name'     => 'required|string|max:255',
+                'product_id' => 'required|integer|exists:products,id', // Harus ada di tabel products
+                'variant_name' => 'required|string|max:255',
                 'additional_price' => 'required|numeric|min:0',
-                'stock'            => 'required|integer|min:0',
+                'stock' => 'required|integer|min:0',
             ]);
 
             // 2. Buat Data
@@ -66,7 +66,7 @@ class ProductVariantController extends Controller
         // Menggunakan findOrFail untuk otomatis melempar 404 jika data tidak ditemukan
         try {
             $productVariant = ProductVariant::with('product')->findOrFail($id);
-            return response()->json($productVariant);
+            return response()->json(['data' => $productVariant]);
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Data varian produk tidak ditemukan.'
@@ -86,10 +86,10 @@ class ProductVariantController extends Controller
 
             // 1. Validasi Data (Menggunakan 'sometimes' untuk PATCH/PUT)
             $validatedData = $request->validate([
-                'product_id'       => 'sometimes|required|integer|exists:products,id',
-                'variant_name'     => 'sometimes|required|string|max:255',
+                'product_id' => 'sometimes|required|integer|exists:products,id',
+                'variant_name' => 'sometimes|required|string|max:255',
                 'additional_price' => 'sometimes|required|numeric|min:0',
-                'stock'            => 'sometimes|required|integer|min:0',
+                'stock' => 'sometimes|required|integer|min:0',
             ]);
 
             // 2. Perbarui Data
@@ -122,13 +122,13 @@ class ProductVariantController extends Controller
         try {
             // Cari data. Jika tidak ada, findOrFail akan melempar pengecualian.
             $productVariant = ProductVariant::findOrFail($id);
-            
+
             $productVariant->delete();
-            
+
             // Respon Sukses (200 OK)
             return response()->json([
                 'message' => 'Varian produk berhasil dihapus!'
-            ], 200); 
+            ], 200);
 
         } catch (ModelNotFoundException $e) {
             return response()->json([
