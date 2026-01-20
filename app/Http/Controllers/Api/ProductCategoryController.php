@@ -95,7 +95,7 @@ class ProductCategoryController extends Controller
             $productCategory = ProductCategory::findOrFail($id);
 
             $validatedData = $request->validate([
-                'name' => 'required|max:255|unique:product_categories,name,' . $id,
+                'name' => 'sometimes|required|max:255|unique:product_categories,name,' . $id,
                 'description' => 'nullable|string',
             ]);
 
@@ -131,7 +131,6 @@ class ProductCategoryController extends Controller
 
             return response()->json([
                 'message' => 'Product category deleted successfully.',
-                'data' => null,
             ], 200);
         } catch (Throwable $e) {
             DB::rollBack();
